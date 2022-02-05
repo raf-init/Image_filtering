@@ -8,4 +8,4 @@ Create a function for the convolution of two 2D arrays.
 ## Task #2
 Create a function for applying "gaussian" or "salt-and-pepper" filter on an image.
 ## Task #3
-Create a function for applying "mean" & "median" filter on an image. (pending)
+Create a function for applying "mean" & "median" filter on an image.
