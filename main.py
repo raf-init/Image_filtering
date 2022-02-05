@@ -3,6 +3,72 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
+def myImFilter(image, param):
+    # Get the horizontal and vertical size of the image
+    img_size_x = image.shape[1]
+    img_size_y = image.shape[0]
+    # Create a 3x3 mean kernel
+    kernel = np.ones([3, 3], dtype=int)
+    kernel = kernel / 11
+    # Get the horizontal and vertical size of the kernel
+    kernel_size_x = kernel.shape[1]
+    kernel_size_y = kernel.shape[0]
+    # Create the filtered image
+    filtered_img_size_x = img_size_x + kernel_size_x - 1
+    filtered_img_size_y = img_size_y + kernel_size_y - 1
+    filtered_img = np.zeros([img_size_y, img_size_x])
+    # Helping variables for resizing the final image, in order to exclude the distorted borders
+    tmp1 = filtered_img_size_y - img_size_y
+    tmp2 = filtered_img_size_x - img_size_x
+    # Calculate the convolution of the image and the 3x3 kernel
+    if param == 'mean':
+        temp1 = 0
+        for i1 in range(1, img_size_y-1):
+            for j1 in range(1, img_size_x-1):
+                filtered_img[i1, j1] = temp1
+                temp1 = 0
+                for i2 in range(0, 3):
+                    q = 1
+                    if i2 == 1:
+                        p = 0
+                    elif i2 == 2:
+                        p = -1
+                    else:
+                        p = 1
+                    for j2 in range(0, 3):
+                        if j2 == 2:
+                            q = -1
+                        temp1 = temp1 + kernel[i2, j2] * image[i1 - p, j1 - q]
+                        q = 0
+        filtered_img = filtered_img[tmp1:-tmp1, tmp2:-tmp2]
+        filtered_img = filtered_img.astype(np.uint8)
+        cv2.imwrite('blurred.png', filtered_img)
+    # Finding the median of the pixels in the contextually 3x3 area
+    # Replacing the center pixel by the median
+    elif param == 'median':
+        temp2 = []
+        for i1 in range(1, img_size_y - 1):
+            for j1 in range(1, img_size_x - 1):
+                if not j1 == 1:
+                    temp2 = sorted(temp2)
+                    filtered_img[i1, j1] = temp2[4]
+                    temp2.clear()
+                for i2 in range(0, 3):
+                    q = 1
+                    if i2 == 1:
+                        p = 0
+                    elif i2 == 2:
+                        p = -1
+                    else:
+                        p = 1
+                    for j2 in range(0, 3):
+                        if j2 == 2:
+                            q = -1
+                        temp2.append(image[i1 - p, j1 - q])
+                        q = 0
+        filtered_img = filtered_img.astype(np.uint8)
+        cv2.imwrite('median.png', filtered_img)
+
 def myImNoise(image, param):
     if param == 'gaussian':
         # Define the values of mean, var and sigma, based on our preference
@@ -109,6 +175,13 @@ myImNoise(img, 'gaussian')
 # "Salt-and-pepper" applies only to grayscale images
 img = cv2.imread('image.jpeg', cv2.IMREAD_GRAYSCALE)
 myImNoise(img, 'saltandpepper')
+# Applying the median filter to the image that we had applied the salt-and-pepper filter previously
+# In order to eliminate the previous noise
+img = cv2.imread('sp.png', 0)
+myImFilter(img, 'median')
+# Applying the mean filter to the image that we had applied the median filter previously
+img = cv2.imread('median.png', 0)
+myImFilter(img, 'mean')
 
 
 
